@@ -1,0 +1,76 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+    <style>
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 414px;
+            max-height: 520px;
+            margin: auto;
+        }
+
+        input,
+        button {
+            width: 100%;
+            height: 50px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        calc = () => {
+            var payGross = $('#pay').val();
+            var rentWeekly = $('#rent').val();
+            var rentWeeks = $('#rentWeeks').val();
+
+            var rent = rentWeekly * rentWeeks;
+
+            if (!payGross || !rent) {
+                $('#output').html('type something idiot');
+                return;
+            }
+
+            var taxRate = 0.35;
+
+            var tax = payGross * taxRate;
+            var payExcl = payGross * .65;
+            var payNet = payExcl - rent;
+
+            var expenses = payNet * .4286;
+            var funMoney = payNet * .1429;
+            var extinguisher = payNet * .2857;
+            var futureFunMoney = payNet * .1429;
+
+            var output = `<div>
+                <p>Total pay: $${Math.round(payGross * 100) / 100}</p>
+                <p>Tax at ${taxRate * 100}%: $${Math.round(tax * 100) / 100}</p>
+                <br />
+                <p>Rent: $${Math.round(rent * 100) / 100}</p>
+                <br />
+                <p>Expenses: $${Math.round(expenses * 100) / 100}</p>
+                <p>Spending money: $${Math.round(funMoney * 100) / 100}</p>
+                <p>Fire extinguisher: $${Math.round(extinguisher * 100) / 100}</p>
+                <p>Goodies: $${Math.round(futureFunMoney * 100) / 100}</p>
+            </div>`;
+            $('#output').html(output);
+        }
+    </script>
+
+    <div class="container">
+        <div id="output"></div>
+        <input type="number" step=".01" id="pay" placeholder="pay amount" />
+        <input type="number" step=".01" id="rent" placeholder="rent weekly" />
+        <input type="number" step="1" id="rentWeeks" placeholder="rent payments" />
+        <button onclick="calc()">give</button>
+    </div>
+</body>
+
+</html>
