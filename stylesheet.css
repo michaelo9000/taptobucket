@@ -1,0 +1,132 @@
+
+        body * {
+            font-size: 20px;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 414px;
+            max-height: 520px;
+            margin: auto;
+        }
+
+        @media only screen and (max-width: 414px) {
+            .container {
+                max-width: 280px;
+            }
+        }
+
+        input,
+        button,
+        .slider {
+            width: 100%;
+            height: 50px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #666;
+            border-radius: 2px;
+        }
+
+        input[type=checkbox] {
+            width: 50px;
+        }
+
+        input[type=checkbox]+label {
+            width: 100%;
+            margin-left: 20px;
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slider {
+            position: relative;
+            margin-top: 100px;
+        }
+
+        .slider-grip,
+        .slider-grip-static {
+            position: absolute;
+            bottom: calc(100% + 1px);
+            width: 0;
+            user-select: none;
+        }
+
+        .slider-grip-label,
+        .slider-grip-percent {
+            border: 1px solid #666;
+            border-radius:2px;
+            background-color: #fff;
+            position: absolute;
+            right: 100%;
+            height: 25px;
+            padding: 2px;
+            font-size: 16px;
+        }
+
+        .slider-grip-percent {
+            right: auto;
+        }
+
+        .slider-grip-label:hover {
+            cursor: pointer;
+        }
+
+        .slider-grip-line {
+            position: absolute;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background-color: #666;
+            font-size: 16px;
+        }
+
+        .slider-grip-body {
+            width:25px;
+            height:50px;
+            padding:15px 0;
+            position:absolute;
+            bottom:-50px;
+            right:100%;
+            z-index:inherit;
+            border-top: 1px solid #666;
+            border-bottom: 1px solid #666;
+        }
+
+        #grip-0 {
+            z-index: 3;
+            height: 50%;
+        }
+        #grip-0 .slider-grip-body {
+            background-color:rgba(0, 48, 73, 1);
+        }
+
+        #grip-1 {
+            z-index: 2;
+            height: 100%;
+        }
+        #grip-1 .slider-grip-body {
+            background-color:rgba(214, 40, 40, 1);
+        }
+
+        #grip-2 {
+            z-index: 1;
+            height: 150%;
+        }
+        #grip-2 .slider-grip-body {
+            background-color:rgba(247, 127, 0, 1);
+        }
+
+        #grip-3 {
+            z-index: 0;
+            height: 200%;
+        }
+        #grip-3 .slider-grip-body {
+            background-color:rgba(252, 191, 73, 1);
+        }
