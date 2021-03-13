@@ -7,6 +7,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
     <style>
+        body * {
+            font-size: 20px;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
         .container {
             width: 100%;
             height: 100%;
@@ -16,45 +22,252 @@
         }
 
         input,
-        button {
+        button,
+        .slider {
             width: 100%;
             height: 50px;
             margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #666;
+            border-radius: 2px;
+        }
+
+        input[type=checkbox] {
+            width: 50px;
+        }
+
+        input[type=checkbox]+label {
+            width: 100%;
+            margin-left: 20px;
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slider {
+            position: relative;
+            margin-top: 100px;
+            background: rgb(0, 48, 73);
+            background: linear-gradient(90deg, rgba(0, 48, 73, 1) 42%, rgba(214, 40, 40, 1) 42%, rgba(214, 40, 40, 1) 70%, rgba(247, 127, 0, 1) 70%, rgba(247, 127, 0, 1) 85%, rgba(252, 191, 73, 1) 85%);
+        }
+
+        .slider-grip,
+        .slider-grip-static {
+            position: absolute;
+            bottom: calc(100% + 1px);
+            width: 0;
+            user-select: none;
+        }
+
+        .slider-grip-label,
+        .slider-grip-percent {
+            border-top-left-radius: 2px;
+            border-top-right-radius: 2px;
+            border: 1px solid #666;
+            background-color: #fff;
+            position: absolute;
+            right: 100%;
+            height: 25px;
+            padding: 2px;
+            font-size: 16px;
+        }
+
+        .slider-grip-percent {
+            right: auto;
+        }
+
+        .slider-grip-label:hover {
+            cursor: pointer;
+        }
+
+        .slider-grip-line {
+            position: absolute;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background-color: #666;
+            font-size: 16px;
+        }
+
+        #grip-0 {
+            z-index: 3;
+            height: 50%;
+        }
+
+        #grip-1 {
+            z-index: 2;
+            height: 100%;
+        }
+
+        #grip-2 {
+            z-index: 1;
+            height: 150%;
+        }
+
+        #grip-3 {
+            z-index: 0;
+            height: 200%;
         }
     </style>
 </head>
 
 <body>
     <script>
+        $(document).ready(function () {
+            $(document).data('grip-0-left', 42);
+            $(document).data('grip-1-left', 70);
+            $(document).data('grip-2-left', 85);
+            $(document).data('grip-3-left', 100);
+
+            $('#grip-0').css('left', '42%');
+            $('#grip-1').css('left', '70%');
+            $('#grip-2').css('left', '85%');
+            $('#grip-3').css('left', '100%');
+
+            $(document).data('slider-width', $('#slider').outerWidth());
+            $(document).data('slider-offset', $('#slider').offset().left);
+
+            $('.slider-grip').each(function (i, grip) {
+                $(this).on('mousedown touchstart', (e) => pointerDown(e, $(this)));
+            });
+
+            $(document).on('mousemove touchmove', (e) => pointerMove(e));
+            $(document).on('mouseup touchend', (e) => pointerUp(e));
+        });
+
+        pointerDown = (e, grip) => {
+            e.preventDefault();
+
+            var isTouch = e.touches;
+            grip.data('down', isTouch ? e.touches[0].clientX : e.clientX);
+        }
+
+        pointerMove = (e) => {
+            var isTouch = e.touches;
+            var pointerX = isTouch ? e.touches[0].clientX : e.clientX;
+            var pointerXInGripSpace = e.offsetX;
+
+            $('.slider-grip').each(function (i, grip) {
+                var isDown = $(this).data('down');
+                if (isDown != null) {
+                    $(this).data('down', pointerX);
+                    var sliderOffset = $(document).data('slider-offset');
+                    var sliderWidth = $(document).data('slider-width');
+                    var leftPercent = ((pointerX
+                        //+ pointerXInGripSpace
+                        - sliderOffset) / sliderWidth) * 100;
+
+                    if (i != 0) {
+                        var previousGripLeftPercent = $(document).data(`grip-${i - 1}-left`);
+                    }
+                    else {
+                        var previousGripLeftPercent = 0;
+                    }
+                    if (leftPercent < previousGripLeftPercent)
+                        leftPercent = previousGripLeftPercent;
+
+                    if (i != 2) {
+                        var nextGripLeftPercent = $(document).data(`grip-${i + 1}-left`);
+                    }
+                    else {
+                        var nextGripLeftPercent = 100;
+                    }
+                    if (leftPercent > nextGripLeftPercent)
+                        leftPercent = nextGripLeftPercent;
+
+                    $(this).css('left', `${leftPercent}%`);
+                    $(document).data(`grip-${i}-left`, leftPercent);
+                }
+            });
+
+            var background = `linear-gradient(
+                90deg, 
+                rgba(0, 48, 73, 1) ${$('#grip-0').css('left')}, 
+                rgba(214, 40, 40, 1) ${$('#grip-0').css('left')}, 
+                rgba(214, 40, 40, 1) ${$('#grip-1').css('left')}, 
+                rgba(247, 127, 0, 1) ${$('#grip-1').css('left')}, 
+                rgba(247, 127, 0, 1) ${$('#grip-2').css('left')}, 
+                rgba(252, 191, 73, 1) ${$('#grip-2').css('left')}
+                )`;
+
+            $('#slider').css('background', background);
+
+            $('#grip-0').children('.slider-grip-percent').html(`${getAllocation(0)}%`);
+            $('#grip-1').children('.slider-grip-percent').html(`${getAllocation(1)}%`);
+            $('#grip-2').children('.slider-grip-percent').html(`${getAllocation(2)}%`);
+            $('#grip-3').children('.slider-grip-percent').html(`${getAllocation(3)}%`);
+        }
+
+        getAllocation = (gripId) => {
+            return Math.round(
+                (
+                    $(document).data(`grip-${gripId}-left`)
+                    -
+                    ($(document).data(`grip-${gripId - 1}-left`) || 0)
+                )
+                * 10)
+                / 10;
+        }
+
+        pointerUp = (e) => {
+            e.preventDefault();
+
+            $('.slider-grip').each(function (i, grip) {
+                $(this).data('down', null);
+            });
+        }
+
+        taxChecked = () => {
+            var checked = $('#pre-tax').prop('checked');
+            var displayValue = checked ? '' : 'none';
+            $('#tax').css('display', displayValue);
+        }
+
         calc = () => {
+            var shouldRemoveTax = $('#pre-tax').prop('checked');
+
             var payGross = $('#pay').val();
             var rentWeekly = $('#rent').val();
-            var rentWeeks = $('#rentWeeks').val();
+            var weeks = $('#weeks').val();
 
-            var rent = rentWeekly * rentWeeks;
+            var rent = rentWeekly * weeks;
 
             if (!payGross || !rent) {
                 $('#output').html('type something idiot');
                 return;
             }
 
-            var taxRate = 0.35;
+            var taxRate = $('#tax').val();
+            // If a decimal tax rate was input, convert it to a percentage.
+            if (taxRate * 1 < 1)
+                taxRate *= 100;
+
+            // Convert tax rate to a decimal.
+            taxRate /= 100;
+
+            if (!shouldRemoveTax)
+                taxRate = 0;
 
             var tax = payGross * taxRate;
-            var payExcl = payGross * .65;
+            var payExcl = payGross - tax;
             var payNet = payExcl - rent;
 
-            var expenses = payNet * .4286;
-            var funMoney = payNet * .1429;
-            var extinguisher = payNet * .2857;
-            var futureFunMoney = payNet * .1429;
+            var expenses = payNet * getAllocation(0) / 100;
+            var extinguisher = payNet * getAllocation(1) / 100;
+            var futureFunMoney = payNet * getAllocation(2) / 100;
+            var funMoney = payNet * getAllocation(3) / 100;
 
             var output = `<div>
                 <p>Total pay: $${Math.round(payGross * 100) / 100}</p>
-                <p>Tax at ${taxRate * 100}%: $${Math.round(tax * 100) / 100}</p>
-                <br />
+                ${ taxRate > 0 ?
+                    `<p>Tax at ${taxRate * 100}%: $${Math.round(tax * 100) / 100}</p>` : ''
+                }
+                <hr />
                 <p>Rent: $${Math.round(rent * 100) / 100}</p>
-                <br />
+                <hr />
                 <p>Expenses: $${Math.round(expenses * 100) / 100}</p>
                 <p>Spending money: $${Math.round(funMoney * 100) / 100}</p>
                 <p>Fire extinguisher: $${Math.round(extinguisher * 100) / 100}</p>
@@ -66,10 +279,42 @@
 
     <div class="container">
         <div id="output"></div>
-        <input type="number" step=".01" id="pay" placeholder="pay amount" />
-        <input type="number" step=".01" id="rent" placeholder="rent weekly" />
-        <input type="number" step="1" id="rentWeeks" placeholder="rent payments" />
-        <button onclick="calc()">give</button>
+        <input type="number" step=".01" id="pay" placeholder="How much ya been paid?" />
+        <div class="flex-row" id="tax-checkbox">
+            <input type="checkbox" id="pre-tax" name="pre-tax" onchange="taxChecked()" />
+            <label for="pre-tax">That's pre-tax</label>
+        </div>
+        <input type="number" step="1" id="weeks" placeholder="For how many weeks?" />
+        <input type="number" step=".01" id="rent" placeholder="What's your rent/mortgage weekly?" />
+        <input type="number" step=".01" id="tax" placeholder="What % goes to tax & student loan?"
+            style="display: none" />
+
+        <p>How do you want to divide up the rest?</p>
+
+        <div class="slider" id="slider">
+            <div class="slider-grip" id="grip-0">
+                <div class="slider-grip-label">Expenses</div>
+                <div class="slider-grip-percent"></div>
+                <div class="slider-grip-line"></div>
+            </div>
+            <div class="slider-grip" id="grip-1">
+                <div class="slider-grip-label">Extinguisher</div>
+                <div class="slider-grip-percent"></div>
+                <div class="slider-grip-line"></div>
+            </div>
+            <div class="slider-grip" id="grip-2">
+                <div class="slider-grip-label">Smile</div>
+                <div class="slider-grip-percent"></div>
+                <div class="slider-grip-line"></div>
+            </div>
+            <div class="slider-grip-static" id="grip-3">
+                <div class="slider-grip-label">Splurge</div>
+                <div class="slider-grip-percent"></div>
+                <div class="slider-grip-line"></div>
+            </div>
+        </div>
+
+        <button onclick="calc()">go</button>
     </div>
 </body>
 
