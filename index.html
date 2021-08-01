@@ -7,24 +7,48 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <link rel="stylesheet" href="./stylesheet.css" type="text/css">
     </link>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.0/dist/js.cookie.min.js"></script>
 </head>
 
 <body>
     <script src="scripts.js"></script>
 
     <div class="container">
+        <button onclick="calc()">CALCULATE</button>
         <div id="output"></div>
         <input type="number" step=".01" id="pay" placeholder="How much ya been paid?" />
         <div class="flex-row" id="tax-checkbox">
             <input type="checkbox" id="pre-tax" name="pre-tax" onchange="taxChecked()" />
             <label for="pre-tax">That's pre-tax</label>
         </div>
-        <input type="number" step="1" id="weeks" placeholder="For how many weeks?" />
-        <input type="number" step=".01" id="rent" placeholder="What's your rent/mortgage weekly?" />
-        <input type="number" step=".01" id="tax" placeholder="What % goes to tax & student loan?"
-            style="display: none" />
 
-        <p>How do you want to divide up the rest?</p>
+        <label class="actual-label">Weeks of pay</label>
+        <input type="number" step="1" id="weeks" placeholder="For how many weeks?" />
+        <label class="actual-label">Weekly rent/mortgage</label>
+        <input type="number" step=".01" id="rent" placeholder="What's your rent/mortgage weekly?" />
+
+        <div id="tax-input" style="display: none">
+            <label class="actual-label">Tax rate</label>
+            <input type="number" step=".01" id="tax" placeholder="What % goes to tax & student loan?" />
+        </div>
+
+        <div class="flex-row" id="minimums-checkbox">
+            <input type="checkbox" id="minimums" name="minimums" onchange="minimumsChecked()" />
+            <label for="minimums">Include minimums *</label>
+        </div>
+
+        <div id="minimums-form" style="display: none">
+            <label class="actual-label">Minimum to expenses</label>
+            <input type="number" id="min-expenses" placeholder="Minimum to expenses" />
+            <label class="actual-label">Minimum to fire extinguisher</label>
+            <input type="number" id="min-extinguisher" placeholder="Minimum to fire extinguisher" />
+            <label class="actual-label">Minimum to splurge</label>
+            <input type="number" id="min-splurge" placeholder="Minimum to splurge" />
+            <label class="actual-label">Minimum to smile</label>
+            <input type="number" id="min-smile" placeholder="Minimum to smile" />
+        </div>
+
+        <h4>How do you want to divide up the rest?</h4>
 
         <div class="slider" id="slider">
             <div class="slider-grip" id="grip-0">
@@ -40,20 +64,33 @@
                 <img class="slider-grip-body" src="drag.svg" />
             </div>
             <div class="slider-grip" id="grip-2">
-                <div class="slider-grip-label">Smile</div>
+                <div class="slider-grip-label">Splurge</div>
                 <div class="slider-grip-percent"></div>
                 <div class="slider-grip-line"></div>
                 <img class="slider-grip-body" src="drag.svg" />
             </div>
             <div class="slider-grip-static" id="grip-3">
-                <div class="slider-grip-label">Splurge</div>
+                <div class="slider-grip-label">Smile</div>
                 <div class="slider-grip-percent"></div>
                 <div class="slider-grip-line"></div>
                 <div class="slider-grip-body"></div>
             </div>
         </div>
 
-        <button onclick="calc()">go</button>
+        <p>
+            The default allocation percentages are The Barefoot Investor's 30/20/10/10, adjusted for the additional
+            30% to housing being excluded since it is a static value.
+        </p>
+
+        <p>
+            * Minimums take priority in the order of the inputs - i.e. if you have $1400 and these minimums:
+        </p>
+        <p>
+            $1000 expenses, $500 fire extinguisher, $200 splurge;
+        </p>
+        <p>
+            $1000, $400 and $0 will be allocated respectively.
+        </p>
     </div>
 </body>
 

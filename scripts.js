@@ -1,10 +1,17 @@
+var cookieOptions = { expires: 999 };
 
 $(document).ready(function () {
-    [42, 70, 85, 100]
-        .forEach((value, i) => {
-            $(document).data(`grip-${i}-left`, value);
-            $(`#grip-${i}`).css('left', `${value}%`);
-        });
+    let allocationArray = [
+        Cookies.get(`grip-0-left`) || 42,
+        Cookies.get(`grip-1-left`) || 70,
+        Cookies.get(`grip-2-left`) || 85,
+        100
+    ];
+
+    allocationArray.forEach((value, i) => {
+        $(document).data(`grip-${i}-left`, value);
+        $(`#grip-${i}`).css('left', `${value}%`);
+    });
 
     setAllocationDisplay();
     setSliderBackground();
@@ -15,6 +22,13 @@ $(document).ready(function () {
     $('.slider-grip').each(function (i, grip) {
         $(this).on('mousedown touchstart', (e) => pointerDown(e, $(this)));
     });
+
+    $('#tax').val(Cookies.get("taxRate") || "");
+    $('#rent').val(Cookies.get("rentWeekly") || "");
+    $('#min-expenses').val(Cookies.get("minExpenses") || "");
+    $('#min-extinguisher').val(Cookies.get("minExtinguisher") || "");
+    $('#min-splurge').val(Cookies.get("minSplurge") || "");
+    $('#min-smile').val(Cookies.get("minSmile") || "");
 
     $(document).on('mousemove touchmove', (e) => pointerMove(e));
     $(document).on('mouseup touchend', (e) => pointerUp(e));
@@ -105,6 +119,8 @@ getAllocation = (gripId) => {
 
 pointerUp = (e) => {
     $('.slider-grip').each(function (i, grip) {
+        let leftPercent = $(document).data(`grip-${i}-left`)
+        Cookies.set(`grip-${i}-left`, leftPercent, cookieOptions);
         $(this).data('down', null);
     });
 }
@@ -112,19 +128,28 @@ pointerUp = (e) => {
 taxChecked = () => {
     var checked = $('#pre-tax').prop('checked');
     var displayValue = checked ? '' : 'none';
-    $('#tax').css('display', displayValue);
+    $('#tax-input').css('display', displayValue);
+}
+
+minimumsChecked = () => {
+    var checked = $('#minimums').prop('checked');
+    var displayValue = checked ? '' : 'none';
+    $('#minimums-form').css('display', displayValue);
 }
 
 calc = () => {
+
     var shouldRemoveTax = $('#pre-tax').prop('checked');
 
     var payGross = $('#pay').val();
     var rentWeekly = $('#rent').val();
     var weeks = $('#weeks').val();
 
+    Cookies.set('rentWeekly', rentWeekly, cookieOptions);
+
     var rent = rentWeekly * weeks;
 
-    if (!payGross || !rent) {
+    if (!payGross) {
         $('#output').html('type something idiot');
         return;
     }
@@ -140,27 +165,88 @@ calc = () => {
     if (!shouldRemoveTax)
         taxRate = 0;
 
+    Cookies.set('taxRate', taxRate, cookieOptions);
+
     var tax = payGross * taxRate;
     var payExcl = payGross - tax;
     var payNet = payExcl - rent;
 
-    var expenses = payNet * getAllocation(0) / 100;
-    var extinguisher = payNet * getAllocation(1) / 100;
-    var futureFunMoney = payNet * getAllocation(2) / 100;
-    var funMoney = payNet * getAllocation(3) / 100;
+    var expensesAllocation = getAllocation(0);
+    var extinguisherAllocation = getAllocation(1);
+    var splurgeAllocation = getAllocation(2);
+    var smileAllocation = getAllocation(3);
+
+    var expenses = payNet * expensesAllocation / 100;
+    var extinguisher = payNet * extinguisherAllocation / 100;
+    var splurge = payNet * splurgeAllocation / 100;
+    var smile = payNet * smileAllocation / 100;
+
+    var includeMinimums = $('#minimums').prop('checked');
+
+    // Holy shit this is lazy and convoluted.
+    // TODO convert to object oriented so that e.g. Smile can be prioritised over Splurge when it has a minimum and Splurge doesn't.
+    if (includeMinimums) {
+        var minExpenses = $('#min-expenses').val();
+        var minExtinguisher = $('#min-extinguisher').val();
+        var minSplurge = $('#min-splurge').val();
+        var minSmile = $('#min-smile').val();
+
+        var totalAllocation = 100;
+
+        if (expenses < minExpenses) {
+            if (minExpenses > payNet)
+                expenses = payNet;
+            else
+                expenses = minExpenses;
+        }
+
+        payNet -= expenses;
+        totalAllocation -= expensesAllocation;
+
+        extinguisher = payNet * extinguisherAllocation / totalAllocation;
+
+        if (extinguisher < minExtinguisher) {
+            if (minExtinguisher > payNet)
+                extinguisher = payNet;
+            else
+                extinguisher = minExtinguisher;
+        }
+
+        totalAllocation -= extinguisherAllocation;
+        payNet -= extinguisher;
+
+        splurge = payNet * splurgeAllocation / totalAllocation;
+
+        if (splurge < minSplurge) {
+            if (minSplurge > payNet)
+                splurge = payNet;
+            else
+                splurge = minSplurge;
+        }
+
+        totalAllocation -= splurgeAllocation;
+        payNet -= splurge;
+
+        smile = payNet;
+
+        Cookies.set('minExpenses', minExpenses, cookieOptions);
+        Cookies.set('minExtinguisher', minExtinguisher, cookieOptions);
+        Cookies.set('minSplurge', minSplurge, cookieOptions);
+        Cookies.set('minSmile', minSmile, cookieOptions);
+    }
 
     var output = `<div>
         <p>Total pay: $${Math.round(payGross * 100) / 100}</p>
-        ${ taxRate > 0 ?
+        ${taxRate > 0 ?
             `<p>Tax at ${taxRate * 100}%: $${Math.round(tax * 100) / 100}</p>` : ''
         }
         <hr />
         <p>Rent: $${Math.round(rent * 100) / 100}</p>
         <hr />
         <p>Expenses: $${Math.round(expenses * 100) / 100}</p>
-        <p>Spending money: $${Math.round(funMoney * 100) / 100}</p>
         <p>Fire extinguisher: $${Math.round(extinguisher * 100) / 100}</p>
-        <p>Goodies: $${Math.round(futureFunMoney * 100) / 100}</p>
+        <p>Splurge: $${Math.round(splurge * 100) / 100}</p>
+        <p>Smile: $${Math.round(smile * 100) / 100}</p>
     </div>`;
 
     $('#output').html(output);
