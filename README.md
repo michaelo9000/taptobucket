@@ -1,0 +1,1 @@
+Simple javascript calculator that takes inputs for an income, tax rate and rent/mortgage costs, and divides the remainder into savings, fun, and expenses according to a budget formula defined by The Barefoot Investor.
